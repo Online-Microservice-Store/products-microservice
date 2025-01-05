@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { CreateStockDto, UpdateStockDto } from './dto';
 import { PaginationDto } from 'src/common';
 import { RpcException } from '@nestjs/microservices';
+import { UpdateStockAmountDto } from './dto/update-stockAmount';
 
 @Injectable()
 export class StocksService extends PrismaClient implements OnModuleInit{
@@ -50,7 +51,17 @@ export class StocksService extends PrismaClient implements OnModuleInit{
     
         return stock;
       }
-
+    async updateStockAmount(updateStockAmount: UpdateStockAmountDto){
+      const {id, amount} = updateStockAmount;
+      const stockFounded = await this.findOne(id);
+      console.log(updateStockAmount);
+      return this.stock.update({
+        where: { id },
+        data: {
+          amount: stockFounded.amount - amount,
+        },
+      });
+    }
     async update(id: string, updateStockDto: UpdateStockDto) {
         const { id: __, ...data } = updateStockDto;
         await this.findOne(id);

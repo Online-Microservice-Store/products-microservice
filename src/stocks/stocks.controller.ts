@@ -3,6 +3,7 @@ import { StocksService } from './stocks.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CreateStockDto, UpdateStockDto } from './dto';
 import { PaginationDto } from 'src/common';
+import { UpdateStockAmountDto } from './dto/update-stockAmount';
 
 @Controller('stocks')
 export class StocksController {
@@ -26,6 +27,11 @@ export class StocksController {
   @MessagePattern('update_stock')
   update(@Payload() updateStockDto : UpdateStockDto){
     return this.stocksService.update(updateStockDto.id , updateStockDto);
+  }
+
+  @MessagePattern('update_stock_quantity')
+  updateStockAmount(@Payload() updateStockAmount: UpdateStockAmountDto){
+    return this.stocksService.updateStockAmount(updateStockAmount);
   }
 
 
