@@ -23,9 +23,19 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
+  @MessagePattern({cmd: 'find_products_by_name'})
+  findProductsByName(@Payload('name') name: string){
+    return this.productsService.findProductsByName(name);
+  }
+
   @MessagePattern({cmd: 'update_product'})
   update(@Payload() updateProductDto : UpdateProductDto){
     return this.productsService.update(updateProductDto.id, updateProductDto)
+  }
+
+  @MessagePattern({ cmd: 'validate_products' })
+  validateProduct( @Payload() ids: string[] ) {
+    return this.productsService.validateProducts(ids);
   }
 
 }

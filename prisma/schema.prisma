@@ -22,6 +22,7 @@ model Product{
   code String
   discount Int
   available Boolean @default(true)
+  image String?
   //Relations
   Catalog Catalog? @relation(fields: [catalogId], references: [id])
   catalogId String?
@@ -33,6 +34,7 @@ model Stock{
   name String
   amount Int
   description String
+  color String
   //Relations
   Product Product? @relation(fields: [productId], references: [id])
   productId String?

@@ -11,6 +11,9 @@ export class CreateStockDto {
     @IsString()
     description: string;
 
+    @IsString()
+    color: string;
+
     //Relations
     @IsOptional()
     @IsString()

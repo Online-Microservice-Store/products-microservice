@@ -1,23 +1,30 @@
-import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { PaginationDto } from 'src/common';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { NATS_SERVICE } from 'src/config';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ProductsService extends PrismaClient implements OnModuleInit{
     private readonly logger = new Logger("Products service");
     
+    constructor(
+      @Inject(NATS_SERVICE) private readonly client : ClientProxy,
+    ){
+      super();
+    }
+
     async onModuleInit() {
         await this.$connect();
     }
 
-    create(createProductDto: CreateProductDto) {
-        
+    create(createProductDto: CreateProductDto) { 
         return this.product.create({
           data: createProductDto,
         });
-      }
+    }
     
     async findAll(paginationDto: PaginationDto) {
         const { page, limit } = paginationDto;
@@ -41,11 +48,29 @@ export class ProductsService extends PrismaClient implements OnModuleInit{
             lastPage: lastPage,
           },
         };
-      }
+    }
     
     async findOne(id: string) {
         const product = await this.product.findFirst({
-          where: { id, available : true }
+          where: { id, available : true },
+          include: {
+            Stock :{
+              select: {
+                id: true,
+                name: true,
+                amount: true,
+                description: true,
+                color: true,
+              }
+            },
+            Catalog: {
+              select: {
+                name: true,
+                discount: true,
+                storeId: true
+              }
+            }
+          },
         });
     
         if (!product) {
@@ -56,8 +81,60 @@ export class ProductsService extends PrismaClient implements OnModuleInit{
         }
     
         return product;
-      }
+    }
     
+    async findProductsByName(name: string){
+    
+        const totalPages = await this.product.count(
+          { where: { 
+            available: true, 
+            name: {
+              startsWith: name,
+              mode: 'insensitive',
+            },
+          } 
+        }
+        );
+
+        const products = await this.product.findMany({
+          where: {
+            available: true,
+            name: {
+              startsWith: name,
+              mode: 'insensitive',
+            },
+          },
+          include: {
+            Catalog :{
+              select: {
+                id: true,
+                name: true,
+                storeId: true,
+              }
+            }
+          },
+        });
+        const storesId = products.map( (product) => product.Catalog.storeId);
+        const stores:any[] = await firstValueFrom(
+          this.client.send('validate_stores', storesId)
+        );
+        const productComplete = products.map( (product) => ({
+          ...product,
+          store: {
+            id: product.Catalog.storeId,
+            name: stores.find( store => store.id == product.Catalog.storeId).name,
+            coordenates: stores.find( store => store.id == product.Catalog.storeId).ubication,
+          }
+        }))
+
+        return {
+          data: productComplete,
+          meta: {
+            total: totalPages,
+          },
+        };
+    }
+
     async update(id: string, updateProductDto: UpdateProductDto) {
         const { id: __, ...data } = updateProductDto;
     
@@ -99,8 +176,6 @@ export class ProductsService extends PrismaClient implements OnModuleInit{
             status: HttpStatus.BAD_REQUEST,
           });
         }
-    
-    
         return products;
     
       }
