@@ -5,6 +5,7 @@ import { PaginationDto } from 'src/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { NATS_SERVICE } from 'src/config';
 import { firstValueFrom } from 'rxjs';
+import { ProductPaginationDto } from './dto/product-pagination.dto';
 
 @Injectable()
 export class ProductsService extends PrismaClient implements OnModuleInit{
@@ -133,6 +134,29 @@ export class ProductsService extends PrismaClient implements OnModuleInit{
             total: totalPages,
           },
         };
+    }
+
+    async findProductsByCatalogId(productPaginationDto : ProductPaginationDto){
+      const { page, limit, id} = productPaginationDto;
+      const totalPages = await this.product.count({
+        where: { catalogId: id}
+      });
+      const lastPage = Math.ceil(totalPages / limit);
+
+      const products = await this.product.findMany({
+        where: { catalogId: id},
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+      return {
+        data: products,
+        meta: {
+          total: totalPages,
+          page: page,
+          lastPage: lastPage,
+        },
+      };      
+    
     }
 
     async update(id: string, updateProductDto: UpdateProductDto) {

@@ -3,6 +3,7 @@ import { ProductsService } from './products.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { PaginationDto } from 'src/common';
+import { ProductPaginationDto } from './dto/product-pagination.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -27,6 +28,12 @@ export class ProductsController {
   findProductsByName(@Payload('name') name: string){
     return this.productsService.findProductsByName(name);
   }
+
+  @MessagePattern({cmd: 'find_products_by_catalogId'})
+  findProductsByCatalogId(@Payload() productPaginationDto : ProductPaginationDto){
+    return this.productsService.findProductsByCatalogId(productPaginationDto);
+  }
+
 
   @MessagePattern({cmd: 'update_product'})
   update(@Payload() updateProductDto : UpdateProductDto){

@@ -20,7 +20,6 @@ export class CreateProductDto{
     code: string;
 
     @IsNumber()
-    @IsPositive()
     discount: number;
 
     @IsOptional()

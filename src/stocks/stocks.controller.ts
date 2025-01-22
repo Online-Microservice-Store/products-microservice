@@ -4,6 +4,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CreateStockDto, UpdateStockDto } from './dto';
 import { PaginationDto } from 'src/common';
 import { UpdateStockAmountDto } from './dto/update-stockAmount';
+import { StockPaginationDto } from './dto/stock-pagination.dto';
 
 @Controller('stocks')
 export class StocksController {
@@ -32,6 +33,11 @@ export class StocksController {
   @MessagePattern('update_stock_quantity')
   updateStockAmount(@Payload() updateStockAmount: UpdateStockAmountDto){
     return this.stocksService.updateStockAmount(updateStockAmount);
+  }
+
+  @MessagePattern('find_stocks_by_productId')
+  findStocksByProductId(@Payload() stockPaginationDto : StockPaginationDto){
+    return this.stocksService.findStocksByProductId(stockPaginationDto);
   }
 
 

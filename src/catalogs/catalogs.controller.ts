@@ -3,6 +3,7 @@ import { CatalogsService } from './catalogs.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { PaginationDto } from 'src/common';
 import { CreateCatalogDto, UpdateCatalogDto } from './dto';
+import { CatalogPaginationDto } from './dto/catalog-pagination.dto';
 
 @Controller('catalogs')
 export class CatalogsController {
@@ -27,5 +28,10 @@ export class CatalogsController {
   update(@Payload() updateCatalogDto : UpdateCatalogDto){
     console.log(updateCatalogDto);
     return this.catalogsService.update(updateCatalogDto.id, updateCatalogDto)
+  }
+
+  @MessagePattern('get_catalogs_by_StoreId')
+  getCatalogsByStoreId(@Payload() catalogPaginationDto : CatalogPaginationDto){
+    return this.catalogsService.getCatalogByStoreId(catalogPaginationDto);
   }
 }

@@ -4,6 +4,7 @@ import { CreateStockDto, UpdateStockDto } from './dto';
 import { PaginationDto } from 'src/common';
 import { RpcException } from '@nestjs/microservices';
 import { UpdateStockAmountDto } from './dto/update-stockAmount';
+import { StockPaginationDto } from './dto/stock-pagination.dto';
 
 @Injectable()
 export class StocksService extends PrismaClient implements OnModuleInit{
@@ -70,6 +71,28 @@ export class StocksService extends PrismaClient implements OnModuleInit{
             where: { id },
             data: data,
         });
+    }
+
+    async findStocksByProductId(stockPaginationDto: StockPaginationDto){
+      const { page, limit, id} = stockPaginationDto;
+      const totalPages = await this.stock.count({
+        where: { productId: id}
+      });
+      const lastPage = Math.ceil(totalPages / limit);
+
+      const stocks = await this.stock.findMany({
+        where: { productId: id},
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+      return {
+        data: stocks,
+        meta: {
+          total: totalPages,
+          page: page,
+          lastPage: lastPage,
+        },
+      };  
     }
 
     async remove(id: string) {

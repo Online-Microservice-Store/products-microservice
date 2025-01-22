@@ -4,6 +4,7 @@ import { CreateCatalogDto, UpdateCatalogDto } from './dto';
 import { RpcException } from '@nestjs/microservices';
 import { PaginationDto } from 'src/common';
 import { UpdateProductDto } from 'src/products/dto';
+import { CatalogPaginationDto } from './dto/catalog-pagination.dto';
 
 @Injectable()
 export class CatalogsService extends PrismaClient implements OnModuleInit {
@@ -39,7 +40,10 @@ export class CatalogsService extends PrismaClient implements OnModuleInit {
     
     async findOne(id: string) {
         const catalog = await this.catalog.findFirst({
-          where: { id}
+          where: { id},
+          include: {
+            Product: true
+          }
         });
     
         if (!catalog) {
@@ -50,7 +54,32 @@ export class CatalogsService extends PrismaClient implements OnModuleInit {
         }
     
         return catalog;
-      }
+    }
+
+    async getCatalogByStoreId(catalogPaginationDto : CatalogPaginationDto){
+      const { page, limit} = catalogPaginationDto;
+      const totalPages = await this.catalog.count({
+        where: { storeId: catalogPaginationDto.id}
+      });
+      const lastPage = Math.ceil(totalPages / limit);
+
+      const catalogs = await this.catalog.findMany({
+        where: { storeId: catalogPaginationDto.id},
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          Product: true
+        }
+      });
+      return {
+        data: catalogs,
+        meta: {
+          total: totalPages,
+          page: page,
+          lastPage: lastPage,
+        },
+      };
+    }
     
     async update(id: string, updateCatalogDto: UpdateCatalogDto) {
         const { id: __, ...data } = updateCatalogDto;

@@ -13,7 +13,6 @@ export class CreateCatalogDto {
     description: string
 
     @IsNumber()
-    @IsPositive()
     discount: number
 
     @IsNumber()
