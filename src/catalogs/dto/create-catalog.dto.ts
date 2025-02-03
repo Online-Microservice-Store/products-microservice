@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { ArrayMinSize, arrayMinSize, IsArray, IsNumber, IsOptional, IsPositive, IsString, ValidateNested } from "class-validator";
+import { ArrayMinSize, arrayMinSize, IsArray, IsNumber, IsOptional, IsPositive, IsString, Min, ValidateNested } from "class-validator";
 import { CreateProductDto } from "src/products/dto";
 
 export class CreateCatalogDto {
@@ -13,7 +13,7 @@ export class CreateCatalogDto {
     description: string
 
     @IsNumber()
-    @IsPositive()
+    @Min(0)
     discount: number
 
     @IsNumber()
